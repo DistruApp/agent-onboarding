@@ -22,7 +22,7 @@ Part of the Distru onboarding guide for AI agents: https://raw.githubusercontent
 
 **Path A: the user has a link.** It looks like `https://staging.distru.com/sign_up/<sign_up_id>`. Verified.
 
-**Path B: Distru staff with a staging superadmin login.** Unverified.
+**Path B: Distru staff with a superadmin login.** Verified on staging Oct 30. Only for staff running the agent themselves; never ask a user for a superadmin login.
 
 ```bash
 curl -s -X POST https://staging.distru.com/api/v1/sessions -H 'Content-Type: application/json' \
@@ -32,7 +32,7 @@ curl -s -X POST https://staging.distru.com/api/v1/registrations -H "Authorizatio
 # → 201 {"id": 81368, "sign_up_id": "c8868077-..."}
 ```
 
-The double-nested `company` is intentional. `category` must be one of: Dispensary, Delivery, Cultivator, Manufacturer, Distributor, Microbusiness, Lab, Other.
+The double-nested `company` is intentional. `category` must be one of: Dispensary, Delivery, Cultivator, Manufacturer, Distributor, Microbusiness, Lab, Other. A new account starts with Core, QuickBooks, Label Printing and Routing on, and Distru Commerce and Metrc off. To start with Distru Commerce on instead (and no ERP), add `"is_distru_commerce_only": true` next to the inner `company` object.
 
 **Path C: the demo provisioning API.** Unverified. It needs the `x-demo-api-key` header, which equals the server's `DEMO_ADMIN_API_KEY` (ask engineering). One call creates the org, the company, and an admin, and turns on the API and Distru Commerce modules. Sibling endpoints: `/demo/api-key`, `/demo/location`, `/demo/license`, `/demo/menu`. They only work on demo companies.
 
@@ -209,3 +209,4 @@ Menu notes:
 - `showTotalCbd` errors unless selling by potency is on.
 - One session per user. Release yours, or the user sees "Login Limit Reached".
 - `toggleComplianceIntegration` (turning on Metrc) and module activation return Unauthorized for a normal admin. Hand them to Distru staff.
+- Declare GraphQL input variables as non-null (`$i: CreateApiKeyInput!`). A nullable declaration is rejected.

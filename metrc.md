@@ -1,50 +1,79 @@
 # Distru onboarding playbook: Metrc inventory
 
-Part of the Distru onboarding guide for AI agents: https://raw.githubusercontent.com/DistruApp/agent-onboarding/main/README.md. Run it after the catalog is in.
+Part of the Distru onboarding guide for AI agents: https://raw.githubusercontent.com/DistruApp/agent-onboarding/main/README.md. Optional: run it only when the user gave you a Metrc API key, after the storefront is live.
 
-**Goal:** every active Metrc package lands in Distru as inventory, including products that are not on the menu.
+**Goal:** every active Metrc package lands in Distru as stock, so the storefront shows real availability. That includes products that are not on the menu yet.
 
-**Status:** the staging mock is set up and verified. Steps 2 to 6 come from the code and have not run yet, because step 2 needs Distru staff.
+**Status:** steps 2 to 6 ran on staging on Oct 30, 2026 (account 81369: 21 active packages, 12,960 units visible in Distru). Step 7, the import itself, has not run yet.
 
 ## Why it matters before you create products
 
-Metrc-tracked THC products must use `inventory_tracking_method: "PACKAGE"`, and that setting is permanent. So decide on Metrc in stage 3 of the main guide, before the catalog is built.
+Metrc-tracked THC products must use `inventory_tracking_method: "PACKAGE"`, and that setting is permanent. So ask the stock question in stage 3 of the main guide, before the catalog is built. If the user skips Metrc, use `PRODUCT` and never come here.
 
 ## 1. Collect two things from the user
 
 1. **Their Metrc user API key.** In Metrc, it's under their name, top right → API Keys.
 2. **Which licenses to connect.** Use the license numbers you found in discovery, and confirm them: "I see OCM-DIST-66-975678-DX1. Connect that one?"
 
-## 2. Enable Metrc on the account (Distru staff, once per account)
+## 2. Metrc must be switched on for the account (Distru staff)
 
-A normal admin gets "Unauthorized" for these, so tell the user "a Distru specialist is flipping on your Metrc connection" and continue with what you can do. Staff steps:
-
-1. Impersonate the account. In Settings → Metrc, turn on "Enable Metrc Integration". This calls GraphQL `toggleComplianceIntegration(complianceType: METRC)`. On staging, this also points the account at the Metrc mock (`metrc_backend = mock`).
-2. Under "Add License", enter each license number exactly as Metrc has it.
-
-## 3. Save the keys (admin)
+Turning Metrc on takes a Distru superadmin. A normal admin gets "Unauthorized". Check first:
 
 ```graphql
-mutation { createApiKey(input: {type: METRC, metrcKey: "<user key>", description: "Company key"}) { id } }
-mutation { createApiKey(input: {type: METRC, metrcKey: "<user key>", userId: "<admin user id>"}) { id } }
+{ currentUser { company { complianceType activeModules } } }
 ```
 
-Only do this after step 2. Before step 2, the key would be checked against live Metrc.
+If `complianceType` is `NONE`, tell the user "a Distru specialist is switching on your Metrc connection", keep building the storefront, and check again before step 3. On staging, switching it on also points the account at the Metrc test server.
 
-## 4. Give each license a home (admin)
+## 3. Save the keys
 
-Create a location, or reuse one, and link it to the license:
+Save the company key first. The license in step 4 is refused until it exists. `description` is required on both.
 
-`POST /public/v1/locations {"name":"WYLD Warehouse", ..., "license_id":"<license id>"}`
+```graphql
+mutation($i: CreateApiKeyInput!) { createApiKey(input: $i) { id } }
+# company key: {"i": {"type": "METRC", "metrcKey": "<user key>", "description": "Company key"}}
+# user key:    {"i": {"type": "METRC", "metrcKey": "<user key>", "userId": "<admin user id>", "description": "User key"}}
+```
 
-Then set it as the intake location in Settings → Metrc.
+## 4. Add each license
 
-## 5. Pull packages
+Get the valid license types for the state from `GET /api/v1/licenses/form_options`, then:
 
-1. List what Metrc has with `GET /public/v1/metrc/packages`, filtered to active packages on this license.
-2. If the list is empty, the cache may only hold changes from the last 24 hours. Ask staff to run "Initiate Backfill" (Settings → Metrc, or `backfillMetrcCaches` with packages included).
+```bash
+curl -s -X POST https://staging.distru.com/api/v1/licenses -H "Authorization: Bearer $JWT" -H 'Content-Type: application/json' -d '{
+  "license": {"company_id": 81369, "license_number": "OCM-DIST-66-975678-DX1", "license_type": "AU Distributor",
+              "compliance_type": "METRC", "active": true,
+              "issue_date": "2026-01-01T00:00:00Z", "expiry_date": "2027-12-31T00:00:00Z"}}'
+# → 200 {"id": 14648, ...}
+```
 
-## 6. Map and import
+`company_id` is required even though it's your own company. Creating the license starts a background pull of Metrc items and strains.
+
+## 5. Give each license a home
+
+Create a location linked to the license, then make it the intake location:
+
+```bash
+POST /public/v1/locations {"name":"WYLD Warehouse","street_address":"...","city":"...","state":"NY","zip":"...","country":"US","license_id":"14648"}
+```
+
+```graphql
+mutation($i: UpdateLicenseInput!) { updateLicense(input: $i) { id } }
+# {"i": {"id": "14648", "intakeLocationId": "<location id>"}}
+```
+
+## 6. Pull packages
+
+Ask Distru for the packages. Leave items and strains out: the pull from step 4 is already fetching them, and asking again is refused.
+
+```graphql
+mutation($i: MetrcBackfillInput!) { backfillMetrcCaches(input: $i) { __typename } }
+# {"i": {"licenseId": "14648", "since": "2026-01-01T00:00:00Z", "includePackages": true, "includeLocations": true, "includeTransfers": true}}
+```
+
+Within about a minute, `GET /public/v1/metrc/packages` lists them. Keep rows with `status: "ACTIVE"`. Progress is visible on `license(id) { metrcPullStatus { hasInProgressBackfills cachesUpdatedUpUntil { packages } } }`.
+
+## 7. Map and import (not yet verified)
 
 1. **Group packages by Metrc item name.**
 2. **Exact name match to an existing product.** Use it. Catalog names were built to match.
