@@ -10,14 +10,15 @@ Part of the Distru onboarding guide for AI agents: https://raw.githubusercontent
 
 ## 2. Read it
 
-The menu is public JSON and needs no auth. LeafLink's robots.txt blocks web-fetch tools, so use curl or Python, or `fetch()` from a browser tab on app.leaflink.com.
+The menu is public JSON and needs no auth. Read it in the browser: open a second tab on `https://app.leaflink.com/menu/<slug>/` (not the Distru tab) and run `fetch()` there. LeafLink's robots.txt blocks web-fetch tools.
 
-**Can't reach LeafLink at all?** Ask the onboarding API to read it: `POST https://distru-agent-onboarding-api.vercel.app/api/import {"action":"plan","source":"https://app.leaflink.com/menu/<slug>/"}`. It needs no account and returns the menu already mapped: the brand (name, logo, banner, description, website), categories, and up to 150 products with SKUs, descriptions, strain groups, featured picks, and photo URLs. It leaves out potency and strain names, so add those from the raw menu when you can.
-
-```bash
-curl -s "https://app.leaflink.com/api/internal/$SLUG/public-menu/brand/"      # name, tagline, website, logo, banner, licenses, sister brands
-curl -s "https://app.leaflink.com/api/internal/$SLUG/public-menu/products/"   # {"count","next","results"}
+```js
+const api = `/api/internal/${SLUG}/public-menu`;
+const brand = await fetch(`${api}/brand/`).then((r) => r.json());       // name, tagline, website, logo, banner, licenses, sister brands
+const page1 = await fetch(`${api}/products/`).then((r) => r.json());    // {"count","next","results"}
 ```
+
+**Faster option:** from the Distru tab, `onboard('/import', {action: 'plan', source: 'https://app.leaflink.com/menu/<slug>/'})` reads the menu for you. It needs no account and returns it already mapped: the brand (name, logo, banner, description, website), categories, and up to 150 products with SKUs, descriptions, strain groups, featured picks, and photo URLs. It leaves out potency and strain names, so add those from the raw menu when you can.
 
 Pages hold at most 50 rows. Follow `next` until it is null, and check that the row count equals `count`.
 

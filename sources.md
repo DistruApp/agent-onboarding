@@ -6,11 +6,12 @@ Part of the Distru onboarding guide for AI agents: https://raw.githubusercontent
 
 Signs of Shopify: images on `cdn.shopify.com`, or `/products/` and `/collections/` pages. Use the store's home URL.
 
-- **Products:** `GET https://<store>/products.json?limit=250` gives names, descriptions (HTML), product types, tags, variants with SKUs, and image URLs. Follow `&page=2` and on until a page comes back empty.
-- **Categories:** `GET /collections.json`, then `GET /collections/<handle>/products.json` for each. Skip catch-all, sale, and state collections ("All", "New", "Best sellers", "Nevada"). Put each product in its largest remaining collection.
+- **Read it in the browser:** open a second tab on the store (not the Distru tab) and `fetch()` the JSON there.
+- **Products:** `/products.json?limit=250` gives names, descriptions (HTML), product types, tags, variants with SKUs, and image URLs. Follow `&page=2` and on until a page comes back empty.
+- **Categories:** `/collections.json`, then `/collections/<handle>/products.json` for each. Skip catch-all, sale, and state collections ("All", "New", "Best sellers", "Nevada"). Put each product in its largest remaining collection.
 - **Photos:** add `&width=1200` to `cdn.shopify.com` image URLs before you send them to `/api/product-images`.
 - **Prices:** retail sites show retail prices, not wholesale. Send 0 unless they confirm the prices are wholesale.
-- **Can't reach the store?** `POST https://distru-agent-onboarding-api.vercel.app/api/import {"action":"plan","source":"https://<store>"}` reads it for you and returns the same mapped shape as a LeafLink menu (leaflink.md §2).
+- **Faster option:** from the Distru tab, `onboard('/import', {action: 'plan', source: 'https://<store>'})` reads it for you and returns the same mapped shape as a LeafLink menu (leaflink.md §2).
 
 ## Spreadsheet, CSV, or Google Sheet (mapping verified)
 

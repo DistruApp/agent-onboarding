@@ -17,13 +17,15 @@ Metrc-tracked THC products must use `inventory_tracking_method: "PACKAGE"`, and 
 
 ## 2. Connect Metrc
 
-One call to the onboarding API switches Metrc on, saves the key, adds each license, makes your storefront location its home, and starts pulling packages.
+One call to the onboarding API, from the Distru tab (api §0), switches Metrc on, saves the key, adds each license, makes your storefront location its home, and starts pulling packages.
 
-```bash
-curl -s -X POST https://distru-agent-onboarding-api.vercel.app/api/metrc -H 'Content-Type: application/json' -d '{
-  "account_token": "'$ACCOUNT_TOKEN'", "metrc_key": "'$METRC_KEY'",
-  "licenses": ["OCM-DIST-12-345678-AB1"], "location_id": "<storefront location id>"}'
-# → {"metrc": "connected", "licenses": [{"license_id": "14648", "number": "...", "location_id": "..."}], "warnings": []}
+```js
+window.METRC_KEY = '<their key>';   // keep it in the tab, never repeat it
+await onboard('/metrc', {
+  account_token: ACCOUNT_TOKEN, metrc_key: METRC_KEY,
+  licenses: ['OCM-DIST-12-345678-AB1'], location_id: '<storefront location id>',
+});
+// → {"metrc": "connected", "licenses": [{"license_id": "14648", "number": "...", "location_id": "..."}], "warnings": []}
 ```
 
 Field notes:
@@ -35,7 +37,7 @@ Field notes:
 
 ## 3. Wait for packages
 
-Packages usually show up in `GET /public/v1/metrc/packages` within 2 to 6 minutes; a new license pulls its Metrc history first. Keep the storefront moving while you wait, and poll every 30 seconds. Keep rows with `status: "ACTIVE"` (the list also holds discontinued packages). If the list is still empty after 10 minutes, check that the license numbers are right and that the key belongs to a user with access to them.
+Packages usually show up in `distru('GET', '/metrc/packages')` within 2 to 6 minutes; a new license pulls its Metrc history first. Keep the storefront moving while you wait, and poll every 30 seconds. Keep rows with `status: "ACTIVE"` (the list also holds discontinued packages). If the list is still empty after 10 minutes, check that the license numbers are right and that the key belongs to a user with access to them.
 
 Each package row has `label`, `status`, `quantity`, `unit_type`, and `item` (`name`, `category_name`, `strain`).
 
@@ -49,7 +51,7 @@ Each package row has `label`, `status`, `quantity`, `unit_type`, and `item` (`na
    - **Unit:** the Metrc unit "Each" maps to Unit.
    - **Brand:** use the item's name prefix when it matches a sister brand from discovery (Bluebird, Fernwood).
    - **Tell the user:** this is the magic moment. "6 products in your Metrc weren't on your menu. They look like Bluebird and Fernwood, so I added them under those brands."
-4. **Import** with `POST /public/v1/packages/import`:
+4. **Import** with `distru('POST', '/packages/import', {...})`:
 
 ```json
 {"packages":[{"compliance_label":"1A4000000000000000000001","product_id":"<uuid>","location_id":"<id>"}]}
