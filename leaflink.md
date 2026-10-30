@@ -6,7 +6,7 @@ Part of the Distru onboarding guide for AI agents: https://raw.githubusercontent
 
 - **The user gave a URL** such as `https://app.leaflink.com/menu/wyld/`. The slug is `wyld`.
 - **The user gave only a brand name.** Web search "<brand> site:app.leaflink.com/menu", or try the brand name lowercased with dashes as the slug.
-- **The menu lists sister brands** under `company.additional_brands` (e.g. Good Tide `good-tide-7`, Grön `gron-11`). Mention them in the discovery card. Load their catalogs only if the user says yes.
+- **Sister brands** are listed under `company.additional_brands` (e.g. Good Tide `good-tide-7`, Grön `gron-11`). They mean the company is likely multi-brand (README, Research step 2). Each has its own slug, so read its menu the same way, and load every brand the user confirms.
 
 ## 2. Read it
 
@@ -25,6 +25,7 @@ What the brand payload gives you for free:
 - **State.** Read it from the company name suffix ("WYLD - NV") or from `zipcode`/`city`.
 - **Licenses.** `company.licenses[].license.number`.
 - **Featured product.** `GET /api/internal/$SLUG/public-menu/featured/` returns the brand's own pick. Make it the first `is_featured` product on the storefront.
+- **Per-brand storefronts.** Each brand slug has its own brand payload, so each brand's storefront gets its own logo, banner, and description.
 
 ## 3. Map each product
 
@@ -73,13 +74,13 @@ When SKUs disagree on a strain's type, use the majority. The field always wins o
 
 ## 4. Create, in this order
 
-1. Rename the account if needed, and create any extra brands.
+1. Rename the account if needed, and create a brand for each extra brand the user confirmed (api §4).
 2. Create the categories you need beyond the seeded ones.
 3. Create subcategories that add information (Gummies, Beverages). Skip ones that just repeat the category.
 4. Create the strains.
 5. Create the products with `menu_visibility: "INCLUDE_IN_ALL"`.
 6. Upload the photos: send the image URLs to `/api/product-images` (api §5).
-7. Mark 4–8 featured products (`is_featured: true`): the LeafLink featured product, plus a bestseller or two per product line. These fill the "Featured Products" row on the storefront.
+7. Mark 4–8 featured products (`is_featured: true`): the LeafLink featured product, plus a bestseller or two per product line. These fill the "Featured Products" row on the storefront. With one storefront per brand, mark 2–4 per brand, starting with each brand's own featured product.
 
 Then go back to the main guide.
 

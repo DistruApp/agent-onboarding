@@ -142,11 +142,12 @@ curl -s -X POST $PUBLIC_API/product-images -H "Authorization: Bearer $API_KEY" \
 
 1. **Location.** The storefront ships from a location. The address is geocoded, so it must be real. Use the brand's warehouse or business address from discovery.
    `POST /locations {"name":"WYLD Warehouse","street_address":"...","city":"...","state":"NV","zip":"...","country":"US"}`
-2. **Products on the storefront.** Set `menu_visibility: "INCLUDE_IN_ALL"` on each product.
+2. **Products on the storefront.** Set `menu_visibility: "INCLUDE_IN_ALL"` on each product. For one storefront per brand, see "Multi-brand" below.
 3. **Featured products.** Pick 4 to 8 hero SKUs and set `is_featured: true` on each with `POST /products {"id","is_featured":true}`. Start with the source's own featured product (LeafLink: `/public-menu/featured/`). Then add one or two per product line, favoring anything described as a bestseller.
 4. **Plan the rows.** The rows on the storefront homepage come from collections. Without them, a buyer sees the banner and a few category tiles, and nothing else. Plan 3 to 5:
    - "Featured Products" (`featured: true`) always goes first.
    - Then add one row per product line, using `product_subcategory_ids` or `product_category_ids`. You can also group by `brand_ids` or effect (`product_group_ids`).
+   - Multi-brand on one storefront: one row per brand (`brand_ids`), right after "Featured Products".
    - A product joins a row when it matches every filter you set. Within one filter, matching any value is enough. Empty rows are hidden.
 5. **Build it.** One call to the onboarding API:
 
@@ -170,6 +171,19 @@ Storefront notes:
 - **Ordering before stock.** Retailers can order before stock is loaded. The call turns that on for you.
 - **Images.** `logo_url` and `banner_url` must be public image URLs. The LeafLink brand payload gives you both.
 - **Changing it later.** Send the same call with `menu_id` and `menu_ref` from the first response. `collections` replaces the whole list, so always resend every row.
+
+### Multi-brand
+
+**One storefront for all brands (recommended).** Make one `/api/storefront` call. Put "Featured Products" first, then one row per brand with `brand_ids`, then product lines if there's room. Keep it to 8 rows or fewer. Use the company's logo, or the lead brand's if the company has none.
+
+**One storefront per brand.** Every product starts on every storefront (`INCLUDE_IN_ALL`), so build the storefronts first, then pin each product to its brand's storefront.
+
+1. Call `/api/storefront` once per brand, with that brand's `name`, `logo_url`, `banner_url`, `accent_color`, `description`, and `website`. Send `url_suffix` in plain ASCII (`gron-wholesale`), because accented letters turn into dashes. Keep each response's `menu_id` and `menu_ref`.
+2. Inside each storefront, put "Featured Products" first, then that brand's product lines. Feature 2 to 4 products per brand.
+3. Pin each product to its brand's storefront: `POST /products {"id":"<product id>","menu_visibility":"INCLUDE_IN_SELECT","menus":["<menu_id>"]}`. *Unverified.* If the public API rejects the id, read the storefront ids from `GET /menus`.
+4. Open each link and check that it shows only its own brand.
+
+All of an account's storefronts share one link prefix (`/menu/<account-slug>/`), so `url_suffix` is what tells them apart. On LeafLink, each brand's own brand payload has its logo and banner (leaflink.md §2).
 
 ## §7 Gotchas we hit
 
