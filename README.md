@@ -1,6 +1,6 @@
 # Distru onboarding guide for AI agents
 
-Version 0.6 · staging · Agent-readable copy: https://raw.githubusercontent.com/DistruApp/agent-onboarding/main/README.md
+Version 0.7 · staging · Agent-readable copy: https://raw.githubusercontent.com/DistruApp/agent-onboarding/main/README.md
 
 > For the Distru team: AI agents read this repo. The onboarding prompt on distru.com links to this README, so a change merged here is live for the next agent. Keep it short, and test changes on staging.
 
@@ -12,7 +12,7 @@ This README is the playbook. Fetch the linked files only when your route needs t
 
 | Page | Read it when |
 |---|---|
-| [api.md](https://raw.githubusercontent.com/DistruApp/agent-onboarding/main/api.md) | Always, before your first Distru call. It covers every API call with tested examples. |
+| [api.md](https://raw.githubusercontent.com/DistruApp/agent-onboarding/main/api.md) | Always, before your first Distru call. It covers every call with tested examples. |
 | [leaflink.md](https://raw.githubusercontent.com/DistruApp/agent-onboarding/main/leaflink.md) | The catalog lives on LeafLink |
 | [sources.md](https://raw.githubusercontent.com/DistruApp/agent-onboarding/main/sources.md) | The catalog is a spreadsheet, Apex Trading, a website, or nothing yet |
 | [metrc.md](https://raw.githubusercontent.com/DistruApp/agent-onboarding/main/metrc.md) | The user wants stock levels from Metrc (optional) |
@@ -22,7 +22,7 @@ This README is the playbook. Fetch the linked files only when your route needs t
 1. **Lead with what you found.** Do the research first, then let the user confirm.
 2. **Ask at most 3 questions,** one per message:
    - their name, their brand, and their menu link or spreadsheet if they have one
-   - confirm what you found, plus their email and Distru sign-up link
+   - confirm what you found, plus the email for their login
    - stock levels: a spreadsheet, their Metrc API key, or skip
 3. **Confirm instead of asking.** Prefer "I'll set you up in Nevada, correct?" over "What state are you in?"
 4. **Work quietly.** Post one short line when a stage finishes and nothing in between. Never show the user raw JSON, ids, or stack traces. Fix the problem and retry, and only mention what they have to act on.
@@ -45,7 +45,7 @@ Use these as written. Swap in the specifics.
 > - Your company also sells Good Tide and Grön
 > - Market: Nevada
 >
-> Look right? What email should I use for your login? If Distru sent you a sign-up link, paste it here too.
+> Look right? What email should I use for your login?
 
 **Stock question.** Ask it once, after the discovery card:
 
@@ -82,14 +82,14 @@ If they skipped stock, the Stock line reads "Not added. Paste counts anytime and
 |---|---|---|
 | 1 | Hello | Send the opener. |
 | 2 | Discover | Research the brand (see "Discovery" below), pick the catalog route, and show the discovery card. |
-| 3 | Confirm | Get the email and their sign-up link (api §1a; no link means a Distru specialist sends one). Ask the stock question. Then lock in the tracking method (see "Stock" below). |
-| 4 | Account | Create the company and the first user, and get an API key. See api §1–2. |
+| 3 | Confirm | Get the email. Ask the stock question. Then lock in the tracking method (see "Stock" below). |
+| 4 | Account | One call creates the account, the login, and the API key. See api §1. |
 | 5 | Catalog | Run your source playbook, then do taxonomy, products, and photos. See api §3–5. |
-| 6 | Storefront | Create the Distru Commerce menu with their logo, banner, 4–8 featured products, and 3–5 product rows (collections). See api §6. Post the link as soon as it loads. |
+| 6 | Storefront | Pick 4–8 featured products, then one call builds the storefront with their logo, banner, and 3–5 product rows. See api §6. Post the link as soon as it loads. |
 | 7 | Stock | Optional. Spreadsheet counts: stock adjustments (api §5). Metrc: run the Metrc playbook. Skip: nothing to do. |
-| 8 | Hand off | Verify the counts, release your session, and send the receipt. |
+| 8 | Hand off | Verify the counts and send the receipt. |
 
-The storefront comes before stock on purpose: it is the moment the user is waiting for, and Metrc needs a one-time step from Distru staff that can run while you build.
+The storefront comes before stock on purpose: it is the moment the user is waiting for.
 
 ## Discovery
 
@@ -137,6 +137,4 @@ Hemp, CBD-only, and non-cannabis items always use `PRODUCT`.
 
 1. `GET /products` must equal the source count. With Metrc, each package must be imported or explained.
 2. Open the storefront link yourself and confirm it shows the product rows.
-3. Release your login session (api §2). If you skip this, the user hits "Login Limit Reached".
-4. Send the receipt.
-5. **Distru staff demos only:** add a row to the "Agent Onboarding – Staging Accounts" tracker in the GTM Agent Hub in Notion.
+3. Send the receipt.

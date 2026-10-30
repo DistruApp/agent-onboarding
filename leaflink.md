@@ -78,7 +78,7 @@ When SKUs disagree on a strain's type, use the majority. The field always wins o
 3. Create subcategories that add information (Gummies, Beverages). Skip ones that just repeat the category.
 4. Create the strains.
 5. Create the products with `menu_visibility: "INCLUDE_IN_ALL"`.
-6. Upload the photos.
+6. Upload the photos: send the image URLs to `/api/product-images` (api §5).
 7. Mark 4–8 featured products (`is_featured: true`): the LeafLink featured product, plus a bestseller or two per product line. These fill the "Featured Products" row on the storefront.
 
 Then go back to the main guide.

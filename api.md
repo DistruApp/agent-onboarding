@@ -4,76 +4,64 @@ Part of the Distru onboarding guide for AI agents: https://raw.githubusercontent
 
 ## §0 Conventions
 
+You use two APIs.
+
+| API | Base URL | Auth | Use it for |
+|---|---|---|---|
+| Onboarding API | `https://distru-agent-onboarding-api.vercel.app/api` | None to start. Then the `account_token` or `api_key` it gives you | Creating the account, photos from URLs, the storefront, and connecting Metrc |
+| Distru public API | `https://staging.distru.com/public/v1` | `Authorization: Bearer <api_key>` | Everything in the catalog: categories, strains, products, locations, stock, Metrc packages. Full reference: https://apidocs.distru.dev/llms-full.txt |
+
+Rules for both:
+
 | | |
 |---|---|
-| App + internal API | `https://staging.distru.com/api/v1/...` and `https://staging.distru.com/graphql` (both use the session JWT) |
-| Public API | `https://staging.distru.com/public/v1/...` (uses the API key). Full reference: https://apidocs.distru.dev/llms-full.txt |
-| Auth header | `Authorization: Bearer <token>` plus `Content-Type: application/json` |
+| Body | JSON, with `Content-Type: application/json` |
 | Ids | Send every id **as a string** in request bodies. Numbers are rejected. |
-| Writes | `POST` creates when there is no `id` and updates when there is one. Updates are sparse. |
-| Lists | Return `{"data": [...], "next_page": ...}`. Follow `next_page` exactly until it is null. |
-| Errors | Always `{"errors":[{"message","pointer"}]}`. Fix the field that `pointer` names and retry. |
+| Errors | The onboarding API returns `{"error": "..."}`. The public API returns `{"errors":[{"message","pointer"}]}`. Fix what the message names and retry. |
 
-**No shell, only a browser tab?** Run `fetch()` from a tab on `https://staging.distru.com` (a plain JSON page such as `/api/v1/registrations/onboarding_survey_form_options` works). The public API does not send CORS headers, so calls have to come from that origin.
+Public API rules:
+
+- `POST` creates when there is no `id` and updates when there is one. Updates are sparse.
+- Lists return `{"data": [...], "next_page": ...}`. Follow `next_page` exactly until it is null.
+
+**No shell, only a browser tab?** The onboarding API allows calls from any page. The public API does not send CORS headers, so run its calls with `fetch()` from a tab on `https://staging.distru.com` (any page there works).
 
 ## §1 Create the account
 
-**1a. Get a sign-up id.** Use one of these paths.
-
-**Path A: the user has a link.** It looks like `https://staging.distru.com/sign_up/<sign_up_id>`. Verified.
-
-**Path B: Distru staff with a superadmin login.** Verified on staging Oct 30. Only for staff running the agent themselves; never ask a user for a superadmin login.
+One call creates the company, the first login, and the API key. Distru Commerce is already on.
 
 ```bash
-curl -s -X POST https://staging.distru.com/api/v1/sessions -H 'Content-Type: application/json' \
-  -d '{"session":{"email":"'$ADMIN_EMAIL'","password":"'$ADMIN_PASSWORD'"},"verify_session_limit":false}'
-curl -s -X POST https://staging.distru.com/api/v1/registrations -H "Authorization: Bearer $ADMIN_JWT" -H 'Content-Type: application/json' \
-  -d '{"company":{"company":{"name":"WYLD","us_state":"NV","email":"owner@wyld.com","category":"Manufacturer","demo":true,"skip_chargeover_subscription":true,"skip_analytics_sync":true}}}'
-# → 201 {"id": 81368, "sign_up_id": "c8868077-..."}
+ONBOARD=https://distru-agent-onboarding-api.vercel.app/api
+curl -s -X POST $ONBOARD/accounts -H 'Content-Type: application/json' -d '{
+  "company_name": "WYLD", "us_state": "NV", "email": "owner@wyld.com",
+  "first_name": "Ada", "last_name": "Owner", "category": "Manufacturer",
+  "menu_source": "LeafLink", "source_url": "https://app.leaflink.com/menu/wyld/"}'
 ```
 
-The double-nested `company` is intentional. `category` must be one of: Dispensary, Delivery, Cultivator, Manufacturer, Distributor, Microbusiness, Lab, Other. A new account starts with Core, QuickBooks, Label Printing and Routing on, and Distru Commerce and Metrc off. To start with Distru Commerce on instead (and no ERP), add `"is_distru_commerce_only": true` next to the inner `company` object.
+It returns 201:
 
-**Path C: the demo provisioning API.** Unverified. It needs the `x-demo-api-key` header, which equals the server's `DEMO_ADMIN_API_KEY` (ask engineering). One call creates the org, the company, and an admin, and turns on the API and Distru Commerce modules. Sibling endpoints: `/demo/api-key`, `/demo/location`, `/demo/license`, `/demo/menu`. They only work on demo companies.
-
-```bash
-curl -s -X POST https://staging.distru.com/demo/account -H "x-demo-api-key: $DEMO_KEY" -H 'Content-Type: application/json' \
-  -d '{"company":{"name":"WYLD","us_state":"NV","organization_name":"WYLD","category":"Manufacturer"},"user_email":"owner@wyld.com"}'
-# → {company_id, organization_id, user_id, password}
+```json
+{"account_id": "81369", "account_token": "acct_...", "api_key": "distru_mcp_...",
+ "login": {"url": "https://staging.distru.com", "email": "owner@wyld.com", "temporary_password": "..."},
+ "public_api": "https://staging.distru.com/public/v1", "modules": ["CORE", "DISTRU_COMMERCE", "..."]}
 ```
 
-**1b. Create the first user (Path A or B).** No auth is needed. The sign-up id works once.
+Field notes:
 
-1. Read the survey choices with `GET /api/v1/registrations/onboarding_survey_form_options`.
-2. Create the user:
+- **`category`.** One of Dispensary, Delivery, Cultivator, Manufacturer, Distributor, Microbusiness, Lab, Other. The default is Manufacturer.
+- **`menu_source`.** Optional. One of LeafLink, Apex, Spreadsheet, Website, No menu, Other. Send it with `source_url` so Distru can follow up.
+- **One call per company.** Every call creates a new account. If a call fails, read the error before you retry, so you don't create a duplicate.
 
-```bash
-curl -s -X POST https://staging.distru.com/api/v1/registrations/user -H 'Content-Type: application/json' -d '{
-  "user": {"sign_up_id": "<id>", "company_id": 81368, "email": "owner@wyld.com",
-           "password": "'$TEMP_PASSWORD'", "password_confirmation": "'$TEMP_PASSWORD'",
-           "terms_of_service_checked": true, "profile": {"first_name": "Ada", "last_name": "Owner", "title": ""}},
-  "onboarding_survey": {"company_roles": ["Brand (owns your own brand)"], "next_features": [], "user_departments": ["Executive"], "user_roles": ["Executive"]}}'
-# → 201 {"jwt", "refresh_token", "user"}   you are now logged in as the admin
-```
+## §2 Keys
 
-## §2 Keys and session
+You get two values. Keep both in variables and never print them.
 
-- **Session JWT.** It comes from §1b or from `POST /api/v1/sessions {"session":{"email","password"},"verify_session_limit":false}`. Use it for `/graphql` and `/api/v1/*`.
-- **API key.** Fetch it once with the JWT and keep it in a variable. Never print it.
+| Value | What it is | Send it to |
+|---|---|---|
+| `api_key` | The account's key for the public API | The public API and `/api/product-images`, as `Authorization: Bearer <api_key>` |
+| `account_token` | Proof you created this account. It lasts 30 days | `/api/storefront` and `/api/metrc`, in the body |
 
-```bash
-curl -s -X POST https://staging.distru.com/graphql -H "Authorization: Bearer $JWT" -H 'Content-Type: application/json' \
-  -d '{"query":"{ myDefaultMcpApiKeyPlaintext }"}'     # → "distru_mcp_..."; works on /public/v1 immediately
-```
-
-- **Release the session last, after the storefront is done.** Distru allows one session per user.
-
-```bash
-curl -s -X POST https://staging.distru.com/api/v1/sessions/delete -H "Authorization: Bearer $JWT" -H 'Content-Type: application/json' \
-  -d '{"tokens":["'$JWT'","'$REFRESH'"]}'              # → {"ok": true}
-```
-
-If a key ever leaks, rotate it with `mutation { regenerateDefaultMcpApiKey { id } }`.
+The `temporary_password` is the user's. It goes in the receipt and nowhere else.
 
 ## §3 Read the defaults
 
@@ -122,91 +110,68 @@ Field rules:
 - **Tracking method.** `inventory_tracking_method` can never change later. Use `PACKAGE` for Metrc-tracked THC products and `PRODUCT` for everything else.
 - **Cannabinoids.** Use `MG` for edibles and drinks, as the package total. Use `PERCENT` for flower, pre-rolls, vapes, and concentrates. Whenever you send THC or CBD, also send `total_cannabinoid_unit`.
 - **Net weight.** For flower, pre-rolls, vapes, and concentrates, set `unit_net_weight` and `unit_net_weight_and_serving_size_unit_type_id` (the Gram id).
-- **Menu visibility.** `menu_visibility: "INCLUDE_IN_ALL"` puts the product on every storefront menu.
+- **Menu visibility.** `menu_visibility: "INCLUDE_IN_ALL"` puts the product on the storefront.
 
-**Photos.** `POST /product-images` as multipart with fields `file`, `product_id`, and `rank` (0–3; 0 is the hero image). Each file can be up to 10 MB. It returns 201.
+**Photos from URLs.** Send up to 10 per call to the onboarding API. It downloads each image and attaches it, so you never handle the files. `rank` is 0–3, and 0 is the hero image. Each image can be up to 10 MB.
 
 ```bash
-curl -s -o img.jpg "$IMAGE_URL"
-curl -s -X POST "$BASE/product-images" -H "Authorization: Bearer $KEY" -F file=@img.jpg -F product_id=$PID -F rank=0
+curl -s -X POST $ONBOARD/product-images -H "Authorization: Bearer $API_KEY" -H 'Content-Type: application/json' -d '{
+  "images": [{"product_id": "1234", "image_url": "https://images.example.com/elderberry.jpg", "rank": 0},
+             {"product_id": "1234", "image_url": "https://images.example.com/elderberry-back.jpg", "rank": 1}]}'
+# → {"uploaded": 2, "failed": 0, "results": [...]}
 ```
 
-Getting photos across with only a browser: the browser can't download images across origins (no CORS), but `window.name` survives navigation within a tab.
+Retry only the rows marked `"ok": false`.
 
-1. Open a tab on the image host (e.g. the cloudfront URL of one image).
-2. `fetch()` every image from that same origin. Resize to 1600px JPEG on a canvas.
-3. Store them as data URLs in `window.name`.
-4. Navigate the same tab to a staging.distru.com JSON page.
-5. Read `window.name` there and upload with `FormData`.
+**Photos the user sent you as files.** Upload them to the public API as multipart, with fields `file`, `product_id`, and `rank`:
 
-This moved 43 photos (9 MB) in one hop.
+```bash
+curl -s -X POST https://staging.distru.com/public/v1/product-images -H "Authorization: Bearer $API_KEY" \
+  -F file=@photo.jpg -F product_id=1234 -F rank=0
+```
 
-**Stock without Metrc (PRODUCT tracking only).** It needs a location first:
+**Stock without Metrc (PRODUCT tracking only).** It needs a location (§6 step 1) first:
 
 `POST /adjustments {"product_id","location_id","quantity":100,"reason":"other","unit_cost":12,"completion_datetime":"2026-10-30T00:00:00Z"}`
 
-## §6 Storefront (Distru Commerce menu)
+## §6 Storefront (Distru Commerce)
 
-All verified, except that **the link only resolves once the company's DISTRU_COMMERCE module is on.** That takes a superadmin today, or Path C, which turns it on at creation. Until then the page says "This Menu Can't Be Found".
-
-1. **Location.** Required by the menu. The address is geocoded, so it must be real.
+1. **Location.** The storefront ships from a location. The address is geocoded, so it must be real. Use the brand's warehouse or business address from discovery.
    `POST /locations {"name":"WYLD Warehouse","street_address":"...","city":"...","state":"NV","zip":"...","country":"US"}`
-2. **Products on the menu.** Set `menu_visibility: "INCLUDE_IN_ALL"` on each product.
+2. **Products on the storefront.** Set `menu_visibility: "INCLUDE_IN_ALL"` on each product.
 3. **Featured products.** Pick 4 to 8 hero SKUs and set `is_featured: true` on each with `POST /products {"id","is_featured":true}`. Start with the source's own featured product (LeafLink: `/public-menu/featured/`). Then add one or two per product line, favoring anything described as a bestseller.
-4. **Logo and banner.** Upload with the JWT: `POST /api/v1/images` multipart with field `image`. It returns `{"id"}`.
-5. **Menu with collections.** GraphQL with the JWT. Add `primaryUrl` to an `upsertMenu` call when you change anything later.
+4. **Plan the rows.** The rows on the storefront homepage come from collections. Without them, a buyer sees the banner and a few category tiles, and nothing else. Plan 3 to 5:
+   - "Featured Products" (`featured: true`) always goes first.
+   - Then add one row per product line, using `product_subcategory_ids` or `product_category_ids`. You can also group by `brand_ids` or effect (`product_group_ids`).
+   - A product joins a row when it matches every filter you set. Within one filter, matching any value is enough. Empty rows are hidden.
+5. **Build it.** One call to the onboarding API:
 
-**Collections decide what the homepage shows.** Official collections (one per state category, plus All Products) only render as small category tiles. The product rows on the homepage come from custom collections. Without them, a buyer sees the banner, two tiles, and nothing else.
-
-Each custom collection is a saved filter:
-- A product joins the collection when it matches every filter you set.
-- Within one filter, matching any of the values is enough.
-- Empty collections are hidden.
-
-Plan 3 to 5 rows:
-- "Featured Products" (`featured: true`) always goes first.
-- Then add one row per subcategory or product line (`productSubcategoryIds`, `productCategoryIds`), brand (`brandIds`), or effect (`productGroupIds`).
-
-```graphql
-mutation($input: CreateMenuInput!) { createMenu(input: $input) { id primaryUrl } }
-# input:
-{"name":"WYLD Wholesale Menu","externalName":"WYLD Wholesale","urlSuffix":"wyld-wholesale",
- "locationIds":["23366"],"active":true,"visibility":"PUBLIC",
- "showProductsWithNoInventoryMode":"SHOW_AND_ALLOW_TO_ORDER","allowCustomersToOverOrder":true,
- "hidePricesMode":"HIDE_FOR_NON_LOGGED_IN_USERS","sellByCaseOnly":false,
- "menuCollections":[
-   {"name":"Featured Products","featured":true},
-   {"name":"THC Gummies","productCategoryIds":["51104"]},
-   {"name":"Hemp CBD Gummies","productSubcategoryIds":["64724"]},
-   {"name":"CBD Sparkling Waters","productSubcategoryIds":["64725"]}]}
+```bash
+curl -s -X POST $ONBOARD/storefront -H 'Content-Type: application/json' -d '{
+  "account_token": "'$ACCOUNT_TOKEN'", "name": "WYLD Wholesale",
+  "logo_url": "https://.../wyld-logo.png", "banner_url": "https://.../wyld-banner.jpg",
+  "accent_color": "#B4532A", "description": "Real fruit gummies ...", "website": "https://wyldcanna.com",
+  "collections": [
+    {"name": "Featured Products", "featured": true},
+    {"name": "THC Gummies", "product_category_ids": ["51104"]},
+    {"name": "Hemp CBD Gummies", "product_subcategory_ids": ["64724"]},
+    {"name": "CBD Sparkling Waters", "product_subcategory_ids": ["64725"]}]}'
+# → {"menu_id": "812", "menu_ref": "...", "url": "https://staging.distru.com/menu/wyld/wyld-wholesale", "rows": [...]}
 ```
 
-`menuCollections` replaces the whole custom list on every `upsertMenu`, so always resend it. Other filter fields you can use: `brandIds`, `productGroupIds`, `strainIds`, `strainTypes`, `officialProductCategoryIds`, and `thcRangeMin`/`thcRangeMax`/`thcRangeUnit`.
+Storefront notes:
 
-6. **Branding.**
-
-```graphql
-mutation($i: UpsertMenuInput!) { upsertMenu(input: $i) { id } }
-# i = the same fields as create (minus urlSuffix, and including menuCollections) + "id", "primaryUrl", and:
-{"accentColor":"#B4532A","companyLogoId":"19694","showCompanyLogo":true,
- "bannerImages":[{"imageId":"19695","position":0}],"showBannerImage":true,
- "companyDescription":"...","showCompanyDescription":true,"companyInfoUrl":"https://...","showCompanyInfo":true}
-```
-
-Menu notes:
-
-- **Selling with no inventory.** `SHOW_AND_ALLOW_TO_ORDER` first needs `mutation { updateCompanySettings(input:{id:"<companyId>", allowNegativeAvailableQuantity:true}) { id } }`.
-- **Hiding prices.** `hidePricesMode` is one of `DO_NOT_HIDE`, `HIDE_FOR_NON_LOGGED_IN_USERS`, or `HIDE_FOR_EVERYONE`. Hide prices while they are $0.
-- **Link format.** `https://staging.distru.com/menu/<company-slug>/<urlSuffix>`. `GET /public/v1/menus` returns `url` and `product_count`.
+- **Optional fields.** `location_ids` (the default is your first location), `url_suffix` (the default comes from `name`), and `hide_prices`.
+- **Prices.** `hide_prices` is `HIDE_FOR_NON_LOGGED_IN_USERS` by default. Use `HIDE_FOR_EVERYONE` while prices are $0, or `DO_NOT_HIDE` once real prices are in.
+- **Ordering before stock.** Retailers can order before stock is loaded. The call turns that on for you.
+- **Images.** `logo_url` and `banner_url` must be public image URLs. The LeafLink brand payload gives you both.
+- **Changing it later.** Send the same call with `menu_id` and `menu_ref` from the first response. `collections` replaces the whole list, so always resend every row.
 
 ## §7 Gotchas we hit
 
 - Numeric ids are rejected. Send strings.
 - A category without `official_product_category_id` fails with "Select a category type".
 - Product names reject `+` and commas.
-- `upsertMenu` is not sparse. Resend the menu's core fields, `locationIds`, `primaryUrl`, and `menuCollections`.
-- A menu with no custom collections looks empty: only category tiles, no product rows.
-- `showTotalCbd` errors unless selling by potency is on.
-- One session per user. Release yours, or the user sees "Login Limit Reached".
-- `toggleComplianceIntegration` (turning on Metrc) and module activation return Unauthorized for a normal admin. Hand them to Distru staff.
-- Declare GraphQL input variables as non-null (`$i: CreateApiKeyInput!`). A nullable declaration is rejected.
+- A storefront with no collections looks empty: only category tiles, no product rows.
+- The storefront needs a location first. Without one, `/api/storefront` returns 409 and says so.
+- Every `/api/accounts` call makes a new account. Don't retry it blindly.
