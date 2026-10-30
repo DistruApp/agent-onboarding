@@ -1,6 +1,6 @@
 # Distru onboarding guide for AI agents
 
-Version 2.0 · Agent-readable copy: https://raw.githubusercontent.com/DistruApp/agent-onboarding/main/README.md
+Version 2.1 · Agent-readable copy: https://raw.githubusercontent.com/DistruApp/agent-onboarding/main/README.md
 
 > For the Distru team: AI agents read this repo. The onboarding prompt on distru.com links to this README, so a change merged here is live for the next agent.
 
@@ -19,7 +19,7 @@ This README is the playbook. Fetch the linked pages when your route needs them:
 
 ## How it should feel
 
-1. **Same opener, every time.** The opener asks for four things in one message: name, company, email, and phone. Nothing else.
+1. **Same opener, every time.** The opener asks for five things in one message: name, company, email, phone, and website. Nothing else.
 2. **Find, then ask.** Every question after the opener is a short follow-up that starts with something you just found. Ask one at a time, as it comes up, and only what research can't answer.
 3. **Keep moving.** Post a follow-up and keep working. Stop and wait only when you need the answer to go on.
 4. **Make answers easy.** Offer the options ("Metrc, a spreadsheet, or not yet?") so a few words answer it. Most companies need 4 or 5 short answers in total.
@@ -76,8 +76,9 @@ Use these as written and swap in the specifics. Format with Markdown: a bold tit
 > - Company
 > - Email (your Distru login)
 > - Phone
+> - Website
 
-All four are required, because Distru's team follows up with every account. If the company is missing, ask for it right away, since research needs it. Ask for a missing email or phone in your next follow-up, and never create the account without them.
+Name, company, email, and phone are required, because Distru's team follows up with every account. If the company is missing, ask for it right away, since research needs it. Ask for a missing email or phone in your next follow-up, and never create the account without them. The website is optional. If they skip it, find it in research and don't ask again.
 
 **Follow-ups.** Every follow-up has the same shape: a ✓ line with what you just found, then one short question.
 
@@ -143,7 +144,7 @@ With one storefront per brand, give each brand its own Storefront line. If they 
 
 Assume a licensed cannabis business in a US state. Search in parallel, and don't stop at the first empty result. The quick scan covers the company and its state. Do the rest while the user answers.
 
-1. **Website.** Start from the email's domain unless it's a personal one like Gmail (ada@acme.example points to acme.example). Get what they make, their brands, address, license numbers, socials, logo, brand color, tagline, and a one-line description.
+1. **Website.** Start from the website they gave you. If they didn't give one, try the email's domain unless it's a personal one like Gmail (ada@acme.example points to acme.example). Get what they make, their brands, address, license numbers, socials, logo, brand color, tagline, and a one-line description.
 2. **Instagram.** `"<company>" instagram` or `site:instagram.com "<company>"`. Bios give the website, location, and sometimes the license. Posts show products and the logo.
 3. **Cannabis search.** `"<company>" cannabis`, `"<company>" cannabis <state>`, and `"<company>" <brand or product line>`.
 4. **Licenses.** `"<company>" cannabis license` and the state regulator's lookup (NY OCM, WA LCB, CA DCC, CO MED, MI CRA, MA CCC, NV CCB, NJ CRC, IL, OR OLCC). It gives the legal name, license type and number, premises address, and state.
