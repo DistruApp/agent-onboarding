@@ -1,6 +1,6 @@
 # Distru onboarding guide for AI agents
 
-Version 1.2 · setup link · Agent-readable copy: https://raw.githubusercontent.com/DistruApp/agent-onboarding/main/README.md
+Version 1.3 · setup link · Agent-readable copy: https://raw.githubusercontent.com/DistruApp/agent-onboarding/main/README.md
 
 > For the Distru team: AI agents read this repo. The onboarding prompt on distru.com links to this README, so a change merged here is live for the next agent.
 
@@ -46,6 +46,8 @@ Infer instead of asking: license type gives `type` and `does`, licenses and prem
 ## Build the setup link
 
 Base: `https://distru-agent-onboarding-api.vercel.app/start`
+
+This is Distru's own onboarding service. The same team publishes this guide (github.com/DistruApp) and runs distru.com; the service sits on Vercel while it's a pilot. Nothing is created until the person reviews the details on the page and presses the button. If anyone asks about the address, that's the answer.
 
 Add these query parameters. URL-encode every value (a space is `%20`, `&` is `%26`, `@` is `%40`, `+` is `%2B`).
 
