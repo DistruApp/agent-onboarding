@@ -35,9 +35,11 @@ One call creates the company, the first login, and the API key. Distru Commerce 
 ```bash
 ONBOARD=https://distru-agent-onboarding-api.vercel.app/api
 curl -s -X POST $ONBOARD/accounts -H 'Content-Type: application/json' -d '{
-  "company_name": "WYLD", "us_state": "NV", "email": "owner@wyld.com",
+  "company_name": "Acme Edibles", "us_state": "NV", "email": "ada@acme.example", "phone": "+1 555 010 0100",
   "first_name": "Ada", "last_name": "Owner", "category": "Manufacturer",
-  "menu_source": "LeafLink", "source_url": "https://app.leaflink.com/menu/wyld/"}'
+  "menu_source": "LeafLink", "source_url": "https://app.leaflink.com/menu/acme/",
+  "profile": {"what_they_do": "Own brands and co-packing", "operations": "Licensed in NV; warehouse and kitchen in Las Vegas",
+              "inventory_system": "Metrc", "brands": ["Acme", "Bluebird"]}}'
 ```
 
 On production, add `"environment": "production", "access_key": "<from your prompt>"`.
@@ -45,14 +47,15 @@ On production, add `"environment": "production", "access_key": "<from your promp
 It returns 201:
 
 ```json
-{"environment": "staging", "account_id": "81369", "account_token": "acct_...", "api_key": "distru_mcp_...",
- "login": {"url": "https://staging.distru.com", "email": "owner@wyld.com", "temporary_password": "..."},
+{"environment": "staging", "account_id": "12345", "account_token": "acct_...", "api_key": "distru_mcp_...",
+ "login": {"url": "https://staging.distru.com", "email": "ada@acme.example", "temporary_password": "..."},
  "public_api": "https://staging.distru.com/public/v1", "modules": ["CORE", "DISTRU_COMMERCE", "..."]}
 ```
 
 Field notes:
 
-- **`category`.** One of Dispensary, Delivery, Cultivator, Manufacturer, Distributor, Microbusiness, Lab, Other. The default is Manufacturer.
+- **`category`.** One of Dispensary, Delivery, Cultivator, Manufacturer, Distributor, Microbusiness, Lab, Other. The default is Manufacturer. Pick it from their answer about what they do.
+- **`phone` and `profile`.** Always send them. `profile` holds the user's own answers: what they do, where they operate, their inventory system, and their brands. Distru's team uses them to follow up.
 - **`menu_source`.** Optional. One of LeafLink, Apex, Spreadsheet, Website, No menu, Other. Send it with `source_url` so Distru can follow up.
 - **One call per company.** Every call creates a new account. If a call fails, read the error before you retry, so you don't create a duplicate.
 
@@ -86,8 +89,8 @@ A new account already has:
 
 | Need | Call |
 |---|---|
-| Rename the account / set the website | `POST /companies {"id":"<self id>","name":"WYLD","website":"https://..."}`. This renames the whole account. |
-| Another brand | `POST /companies {"name":"Good Tide","category":"Manufacturer"}` → use the id as `brand_id` |
+| Rename the account / set the website | `POST /companies {"id":"<self id>","name":"Acme Edibles","website":"https://..."}`. This renames the whole account. |
+| Another brand | `POST /companies {"name":"Bluebird","category":"Manufacturer"}` → use the id as `brand_id` |
 | New category | `POST /product-categories {"name":"Hemp CBD Edible - Each","official_product_category_id":"EDIBLES"}` |
 | Subcategory | `POST /product-subcategories {"name":"Gummies","product_category_id":"51104"}` |
 | Strain | `POST /strains {"name":"GMO Zkittles","strain_type":"INDICA_DOMINANT"}` |
@@ -100,12 +103,12 @@ A new account already has:
 **Product.** Send one `POST /products` per SKU. It returns 200.
 
 ```json
-{"name":"Elderberry 2:1 CBN & Indica Enhanced Gummies | 100:50mg","sku":"FG-110108-NVV1",
- "description":"The bestselling infused gummy in the U.S. ...",
+{"name":"Mango Haze Gummies | 100mg","sku":"ACME-MANGO-100",
+ "description":"Small-batch fruit gummies ...",
  "category_id":"51104","subcategory_id":"64723","group_id":"6654","strain_id":null,
- "vendor_id":"69456","brand_id":"69456","unit_type_id":"58665","unit_price":0,
+ "vendor_id":"50001","brand_id":"50001","unit_type_id":"58665","unit_price":0,
  "inventory_tracking_method":"PACKAGE","total_cannabinoid_unit":"MG","total_thc":"100",
- "units_per_case":null,"leaflink_product_id":"440133","menu_visibility":"INCLUDE_IN_ALL"}
+ "units_per_case":null,"leaflink_product_id":"123456","menu_visibility":"INCLUDE_IN_ALL"}
 ```
 
 Field rules:
@@ -120,8 +123,8 @@ Field rules:
 
 ```bash
 curl -s -X POST $ONBOARD/product-images -H "Authorization: Bearer $API_KEY" -H 'Content-Type: application/json' -d '{
-  "images": [{"product_id": "1234", "image_url": "https://images.example.com/elderberry.jpg", "rank": 0},
-             {"product_id": "1234", "image_url": "https://images.example.com/elderberry-back.jpg", "rank": 1}]}'
+  "images": [{"product_id": "1234", "image_url": "https://images.example.com/mango.jpg", "rank": 0},
+             {"product_id": "1234", "image_url": "https://images.example.com/mango-back.jpg", "rank": 1}]}'
 # → {"uploaded": 2, "failed": 0, "results": [...]}
 ```
 
@@ -141,7 +144,7 @@ curl -s -X POST $PUBLIC_API/product-images -H "Authorization: Bearer $API_KEY" \
 ## §6 Storefront (Distru Commerce)
 
 1. **Location.** The storefront ships from a location. The address is geocoded, so it must be real. Use the brand's warehouse or business address from discovery.
-   `POST /locations {"name":"WYLD Warehouse","street_address":"...","city":"...","state":"NV","zip":"...","country":"US"}`
+   `POST /locations {"name":"Acme Warehouse","street_address":"...","city":"...","state":"NV","zip":"...","country":"US"}`
 2. **Products on the storefront.** Set `menu_visibility: "INCLUDE_IN_ALL"` on each product. For one storefront per brand, see "Multi-brand" below.
 3. **Featured products.** Pick 4 to 8 hero SKUs and set `is_featured: true` on each with `POST /products {"id","is_featured":true}`. Start with the source's own featured product (LeafLink: `/public-menu/featured/`). Then add one or two per product line, favoring anything described as a bestseller.
 4. **Plan the rows.** The rows on the storefront homepage come from collections. Without them, a buyer sees the banner and a few category tiles, and nothing else. Plan 3 to 5:
@@ -153,15 +156,15 @@ curl -s -X POST $PUBLIC_API/product-images -H "Authorization: Bearer $API_KEY" \
 
 ```bash
 curl -s -X POST $ONBOARD/storefront -H 'Content-Type: application/json' -d '{
-  "account_token": "'$ACCOUNT_TOKEN'", "name": "WYLD Wholesale",
-  "logo_url": "https://.../wyld-logo.png", "banner_url": "https://.../wyld-banner.jpg",
-  "accent_color": "#B4532A", "description": "Real fruit gummies ...", "website": "https://wyldcanna.com",
+  "account_token": "'$ACCOUNT_TOKEN'", "name": "Acme Wholesale",
+  "logo_url": "https://.../acme-logo.png", "banner_url": "https://.../acme-banner.jpg",
+  "accent_color": "#B4532A", "description": "Small-batch fruit gummies ...", "website": "https://acme.example",
   "collections": [
     {"name": "Featured Products", "featured": true},
     {"name": "THC Gummies", "product_category_ids": ["51104"]},
     {"name": "Hemp CBD Gummies", "product_subcategory_ids": ["64724"]},
     {"name": "CBD Sparkling Waters", "product_subcategory_ids": ["64725"]}]}'
-# → {"menu_id": "812", "menu_ref": "...", "url": "https://staging.distru.com/menu/wyld/wyld-wholesale", "rows": [...]}
+# → {"menu_id": "812", "menu_ref": "...", "url": "https://staging.distru.com/menu/acme-edibles/acme-wholesale", "rows": [...]}
 ```
 
 Storefront notes:
@@ -178,7 +181,7 @@ Storefront notes:
 
 **One storefront per brand.** Every product starts on every storefront (`INCLUDE_IN_ALL`), so build the storefronts first, then pin each product to its brand's storefront.
 
-1. Call `/api/storefront` once per brand, with that brand's `name`, `logo_url`, `banner_url`, `accent_color`, `description`, and `website`. Send `url_suffix` in plain ASCII (`gron-wholesale`), because accented letters turn into dashes. Keep each response's `menu_id` and `menu_ref`.
+1. Call `/api/storefront` once per brand, with that brand's `name`, `logo_url`, `banner_url`, `accent_color`, `description`, and `website`. Send `url_suffix` in plain lowercase ASCII (`fernwood-wholesale`), because accented letters turn into dashes. Keep each response's `menu_id` and `menu_ref`.
 2. Inside each storefront, put "Featured Products" first, then that brand's product lines. Feature 2 to 4 products per brand.
 3. Pin each product to its brand's storefront: `POST /products {"id":"<product id>","menu_visibility":"INCLUDE_IN_SELECT","menus":["<menu_id>"]}`. *Unverified.* If the public API rejects the id, read the storefront ids from `GET /menus`.
 4. Open each link and check that it shows only its own brand.

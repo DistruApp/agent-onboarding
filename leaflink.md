@@ -1,12 +1,12 @@
 # Distru onboarding playbook: LeafLink
 
-Part of the Distru onboarding guide for AI agents: https://raw.githubusercontent.com/DistruApp/agent-onboarding/main/README.md. Verified end to end with `wyld` (35 products and 43 photos). The mapping was also dry-run on `mayflower-medicinals` (flower, pre-rolls, vapes).
+Part of the Distru onboarding guide for AI agents: https://raw.githubusercontent.com/DistruApp/agent-onboarding/main/README.md. Verified end to end on a 35-product edibles menu with 43 photos. The mapping was also dry-run on a flower, pre-roll, and vape menu.
 
 ## 1. Find the menu
 
-- **The user gave a URL** such as `https://app.leaflink.com/menu/wyld/`. The slug is `wyld`.
+- **The user gave a URL** such as `https://app.leaflink.com/menu/acme/`. The slug is `acme`.
 - **The user gave only a brand name.** Web search "<brand> site:app.leaflink.com/menu", or try the brand name lowercased with dashes as the slug.
-- **Sister brands** are listed under `company.additional_brands` (e.g. Good Tide `good-tide-7`, Grön `gron-11`). They mean the company is likely multi-brand (README, Research step 2). Each has its own slug, so read its menu the same way, and load every brand the user confirms.
+- **Sister brands** are listed under `company.additional_brands` (e.g. Bluebird `bluebird-7`, Fernwood `fernwood-11`). They mean the company is likely multi-brand (README, Research step 2). Each has its own slug, so read its menu the same way, and load every brand the user confirms.
 
 ## 2. Read it
 
@@ -22,7 +22,7 @@ Pages hold at most 50 rows. Follow `next` until it is null, and check that the r
 What the brand payload gives you for free:
 
 - **Discovery card and storefront.** `image` is the logo, `banner` is the banner, and `tagline`, `description`, and `website` fill in the rest.
-- **State.** Read it from the company name suffix ("WYLD - NV") or from `zipcode`/`city`.
+- **State.** Read it from the company name suffix ("Acme - NV") or from `zipcode`/`city`.
 - **Licenses.** `company.licenses[].license.number`.
 - **Featured product.** `GET /api/internal/$SLUG/public-menu/featured/` returns the brand's own pick. Make it the first `is_featured` product on the storefront.
 - **Per-brand storefronts.** Each brand slug has its own brand payload, so each brand's storefront gets its own logo, banner, and description.
@@ -84,7 +84,7 @@ When SKUs disagree on a strain's type, use the majority. The field always wins o
 
 Then go back to the main guide.
 
-## What WYLD produced (reference)
+## Reference run (a 35-product edibles menu)
 
 - **Products:** 35. 15 THC gummies go to "Infused Edible - Each" with `PACKAGE` tracking. 20 hemp CBD gummies and sparkling waters go to "Hemp CBD Edible - Each" with `PRODUCT` tracking.
 - **Subcategories:** Gummies and Beverages.

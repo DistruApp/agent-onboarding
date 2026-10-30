@@ -22,7 +22,7 @@ Part of the Distru onboarding guide for AI agents: https://raw.githubusercontent
 | stock (optional) | Qty, On Hand, Available |
 
 3. Show the mapping to the user in one line and keep going unless they object. For example: "I'll read Product as name, Item # as SKU, Wholesale as price, and skip the Notes column."
-4. If there is no SKU column, generate stable SKUs from the brand and product (e.g. `WYLD-ELDERBERRY-100`) and say so in the receipt.
+4. If there is no SKU column, generate stable SKUs from the brand and product (e.g. `ACME-MANGO-100`) and say so in the receipt.
 5. Prices from a spreadsheet are real, so load them. This is the main advantage over a public menu.
 6. Stock counts load as stock adjustments (API cookbook §5), but only when the user does not use Metrc. With Metrc, inventory comes from Metrc.
 
@@ -34,7 +34,7 @@ Part of the Distru onboarding guide for AI agents: https://raw.githubusercontent
 ## Brand website only (best effort)
 
 - Product pages usually give name, category, strain, potency, description, and photo. Prices and SKUs are usually missing.
-- Build the list, then confirm it in one message before you import: "I found 18 products on wyldcanna.com. Import all 18?"
+- Build the list, then confirm it in one message before you import: "I found 18 products on acme.example. Import all 18?"
 
 ## Nothing yet
 
