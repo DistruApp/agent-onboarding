@@ -1,6 +1,6 @@
 # Distru onboarding guide for AI agents
 
-Version 0.10 · staging by default · Agent-readable copy: https://raw.githubusercontent.com/DistruApp/agent-onboarding/main/README.md
+Version 0.11 · staging by default · Agent-readable copy: https://raw.githubusercontent.com/DistruApp/agent-onboarding/main/README.md
 
 > For the Distru team: AI agents read this repo. The onboarding prompt on distru.com links to this README, so a change merged here is live for the next agent. Keep it short, and test changes on staging.
 
@@ -19,7 +19,7 @@ This README is the playbook. Fetch the linked files only when your route needs t
 
 ## How it should feel
 
-1. **Start small.** The opener asks for two things: their name and their company. Nothing else.
+1. **Start small.** The opener asks for three things in one message: their name, their company, and the email for their login. Nothing else.
 2. **Find, then ask.** Every question after the opener is a short follow-up that starts with something you just found. Ask one at a time, as it comes up, and only what research can't answer.
 3. **Keep moving.** Post a follow-up and keep working. Stop and wait only when you need the answer to go on.
 4. **Make answers easy.** Offer the options ("Metrc, a spreadsheet, or not yet?") so a few words answer it. Most companies need 4 or 5 short answers in total.
@@ -35,7 +35,7 @@ This README is the playbook. Fetch the linked files only when your route needs t
 | 1 | Hello | Send the opener. |
 | 2 | Quick scan | Spend under 30 seconds on one to three searches: the company, its website, and its state. Then send the inventory follow-up. |
 | 3 | Research | Keep researching (see "Research" below). Send each follow-up in the table below as soon as it comes up. |
-| 4 | Plan | Send the plan card: what you found, what you will build, and the last thing you need, their login email. |
+| 4 | Plan | Send the plan card: what you found, what you will build, and the login email to confirm. |
 | 5 | Account | One call creates the account, the login, and the API key. If your prompt says production and gives an access key, pass both. See api §1. |
 | 6 | Catalog | Run your source playbook for every confirmed brand, then do taxonomy, products, and photos. See api §3–5. |
 | 7 | Storefront | Pick featured products, then build one storefront, or one per brand. See api §6. Post the link as soon as it loads. |
@@ -44,7 +44,7 @@ This README is the playbook. Fetch the linked files only when your route needs t
 
 The storefront comes before stock on purpose: it is the moment the user is waiting for.
 
-**Waiting for answers.** Some apps let the user reply while you work, and some only after you stop. So post each follow-up and keep working. When you reach a step that needs an answer you don't have, stop, and end your message by repeating every open question. You need the inventory answer before you create products, the storefront layout before you build storefronts, and the email before you create the account.
+**Waiting for answers.** Some apps let the user reply while you work, and some only after you stop. So post each follow-up and keep working. When you reach a step that needs an answer you don't have, stop, and end your message by repeating every open question. You need the inventory answer before you create products, the storefront layout before you build storefronts, and a yes on the plan card before you create the account.
 
 ## Message kit
 
@@ -54,7 +54,12 @@ Use these as written and swap in the specifics. Format with Markdown: a bold tit
 
 > **Distru Commerce onboarding**
 >
-> Hi, I'm your onboarding agent. What's your name, and what's your company called?
+> Hi, I'm your onboarding agent. To get started, send me:
+> - your name
+> - your company
+> - the email you want for your Distru login
+
+If the company is missing, ask for it right away, since research needs it. If only the email is missing, ask for it in the plan card.
 
 **Follow-ups.** Every follow-up has the same shape: a ✓ line with what you just found, then one short question.
 
@@ -83,7 +88,7 @@ Send the ones that apply, in this order:
 > - **Storefront:** one storefront with 4 rows
 > - **Stock:** from Metrc
 >
-> Last thing: what email should I use for your login? Then I'll build it.
+> I'll create your login with **owner@wyld.com**. Good to go?
 
 **Milestones,** one line each, posted as each stage completes:
 
@@ -116,7 +121,7 @@ With one storefront per brand, give each brand its own Storefront line. If they 
 
 The quick scan covers step 1 and the state. Do the rest while the user answers.
 
-1. **Company and website.** Get the logo, the tagline, and a one-line description. Name the account after the company, unless the user asks for a different name. When the company and its brands have different names, the company name goes on the account and each brand becomes a brand (api §4).
+1. **Company and website.** Start from their email's domain unless it's a personal one like Gmail (owner@wyldcanna.com points to wyldcanna.com). Get the logo, the tagline, and a one-line description. Name the account after the company, unless the user asks for a different name. When the company and its brands have different names, the company name goes on the account and each brand becomes a brand (api §4).
 2. **Brand setup.** Decide whether the company is single-brand or multi-brand. Use the company's own website: a menu link usually covers one brand, so it can hide the others. Check:
    - a "Brands" or "Our Brands" page, the main navigation, and the footer
    - the About page ("home of X, Y, and Z")
