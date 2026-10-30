@@ -9,7 +9,7 @@ You use two APIs.
 | API | Base URL | Auth | Use it for |
 |---|---|---|---|
 | Onboarding API | `https://distru-agent-onboarding-api.vercel.app/api` | None to start. Then the `account_token` or `api_key` it gives you | Creating the account, photos from URLs, the storefront, and connecting Metrc |
-| Distru public API | `https://staging.distru.com/public/v1` | `Authorization: Bearer <api_key>` | Everything in the catalog: categories, strains, products, locations, stock, Metrc packages. Full reference: https://apidocs.distru.dev/llms-full.txt |
+| Distru public API | The `public_api` URL from the account response (`https://staging.distru.com/public/v1` on staging) | `Authorization: Bearer <api_key>` | Everything in the catalog: categories, strains, products, locations, stock, Metrc packages. Full reference: https://apidocs.distru.dev/llms-full.txt |
 
 Rules for both:
 
@@ -24,7 +24,9 @@ Public API rules:
 - `POST` creates when there is no `id` and updates when there is one. Updates are sparse.
 - Lists return `{"data": [...], "next_page": ...}`. Follow `next_page` exactly until it is null.
 
-**No shell, only a browser tab?** The onboarding API allows calls from any page. The public API does not send CORS headers, so run its calls with `fetch()` from a tab on `https://staging.distru.com` (any page there works).
+**Staging or production.** Accounts are made on staging unless your prompt says production and gives you an access key. Then add `"environment": "production"` and `"access_key"` to `/api/accounts`, and `"environment": "production"` to `/api/product-images`. The account token carries the environment for every other onboarding call. Take every Distru URL from the account response (`public_api`, `login.url`); the staging hosts below are examples.
+
+**No shell, only a browser tab?** The onboarding API allows calls from any page. The public API does not send CORS headers, so run its calls with `fetch()` from a tab on the account's Distru host (`login.url`; any page there works).
 
 ## §1 Create the account
 
@@ -38,10 +40,12 @@ curl -s -X POST $ONBOARD/accounts -H 'Content-Type: application/json' -d '{
   "menu_source": "LeafLink", "source_url": "https://app.leaflink.com/menu/wyld/"}'
 ```
 
+On production, add `"environment": "production", "access_key": "<from your prompt>"`.
+
 It returns 201:
 
 ```json
-{"account_id": "81369", "account_token": "acct_...", "api_key": "distru_mcp_...",
+{"environment": "staging", "account_id": "81369", "account_token": "acct_...", "api_key": "distru_mcp_...",
  "login": {"url": "https://staging.distru.com", "email": "owner@wyld.com", "temporary_password": "..."},
  "public_api": "https://staging.distru.com/public/v1", "modules": ["CORE", "DISTRU_COMMERCE", "..."]}
 ```
@@ -58,7 +62,7 @@ You get two values. Keep both in variables and never print them.
 
 | Value | What it is | Send it to |
 |---|---|---|
-| `api_key` | The account's key for the public API | The public API and `/api/product-images`, as `Authorization: Bearer <api_key>` |
+| `api_key` | The account's key for the public API | The public API (at `public_api`) and `/api/product-images`, as `Authorization: Bearer <api_key>` |
 | `account_token` | Proof you created this account. It lasts 30 days | `/api/storefront` and `/api/metrc`, in the body |
 
 The `temporary_password` is the user's. It goes in the receipt and nowhere else.
@@ -121,12 +125,12 @@ curl -s -X POST $ONBOARD/product-images -H "Authorization: Bearer $API_KEY" -H '
 # → {"uploaded": 2, "failed": 0, "results": [...]}
 ```
 
-Retry only the rows marked `"ok": false`.
+On production, add `"environment": "production"` to the body. Retry only the rows marked `"ok": false`.
 
 **Photos the user sent you as files.** Upload them to the public API as multipart, with fields `file`, `product_id`, and `rank`:
 
 ```bash
-curl -s -X POST https://staging.distru.com/public/v1/product-images -H "Authorization: Bearer $API_KEY" \
+curl -s -X POST $PUBLIC_API/product-images -H "Authorization: Bearer $API_KEY" \
   -F file=@photo.jpg -F product_id=1234 -F rank=0
 ```
 

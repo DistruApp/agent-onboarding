@@ -1,6 +1,6 @@
 # Distru onboarding guide for AI agents
 
-Version 0.7 · staging · Agent-readable copy: https://raw.githubusercontent.com/DistruApp/agent-onboarding/main/README.md
+Version 0.8 · staging by default · Agent-readable copy: https://raw.githubusercontent.com/DistruApp/agent-onboarding/main/README.md
 
 > For the Distru team: AI agents read this repo. The onboarding prompt on distru.com links to this README, so a change merged here is live for the next agent. Keep it short, and test changes on staging.
 
@@ -63,8 +63,8 @@ Use these as written. Swap in the specifics.
 ```
 WYLD is live on Distru Commerce
 
-Storefront   https://staging.distru.com/menu/wyld/wyld-wholesale
-Log in       https://staging.distru.com
+Storefront   <url from the storefront call>
+Log in       <login.url from the account call>
 Email        owner@wyld.com
 Password     <temporary password>  (change it after you log in)
 
@@ -83,7 +83,7 @@ If they skipped stock, the Stock line reads "Not added. Paste counts anytime and
 | 1 | Hello | Send the opener. |
 | 2 | Discover | Research the brand (see "Discovery" below), pick the catalog route, and show the discovery card. |
 | 3 | Confirm | Get the email. Ask the stock question. Then lock in the tracking method (see "Stock" below). |
-| 4 | Account | One call creates the account, the login, and the API key. See api §1. |
+| 4 | Account | One call creates the account, the login, and the API key. If your prompt says production and gives an access key, pass both. See api §1. |
 | 5 | Catalog | Run your source playbook, then do taxonomy, products, and photos. See api §3–5. |
 | 6 | Storefront | Pick 4–8 featured products, then one call builds the storefront with their logo, banner, and 3–5 product rows. See api §6. Post the link as soon as it loads. |
 | 7 | Stock | Optional. Spreadsheet counts: stock adjustments (api §5). Metrc: run the Metrc playbook. Skip: nothing to do. |

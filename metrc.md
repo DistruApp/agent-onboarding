@@ -61,4 +61,4 @@ Up to 300 packages per call, one license per call. The call is all or nothing, s
 
 ## Staging
 
-On staging, Metrc calls go to Distru's Metrc test server, not the real Metrc. A real Metrc key won't work there. Distru staff have test keys for demos.
+On staging, Metrc calls go to Distru's Metrc test server, not the real Metrc. A real Metrc key won't work there. Distru staff have test keys for demos. On production, use the user's real Metrc key and licenses.
