@@ -130,7 +130,6 @@ Add these query parameters. URL-encode every value (a space is `%20`, `&` is `%2
 | `inventory` | Metrc, Spreadsheet, Not yet, or what they named | Optional |
 | `brands` | Brand names, comma-separated | Optional |
 | `store` | Storefront name | Optional. Default "<company> Wholesale" |
-| `key` | The access code, only if your prompt gives you one | Only then |
 
 Example:
 
