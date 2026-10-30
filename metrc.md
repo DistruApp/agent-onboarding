@@ -4,7 +4,7 @@ Part of the Distru onboarding guide for AI agents: https://raw.githubusercontent
 
 **Goal:** every active Metrc package lands in Distru as stock, so the storefront shows real availability. That includes products that are not on the menu yet.
 
-**Status:** connecting Metrc and pulling packages ran on staging on Oct 30, 2026 (21 active packages, 12,960 units), one call at a time. The single `/api/metrc` call that wraps them is new and has not run end to end yet. Step 4, the import, has not run yet.
+**Status:** verified end to end on staging on Oct 30, 2026. One `/api/metrc` call connected the license, packages appeared about 4 minutes later, and the import brought in 21 active packages (12,960 units) as stock, including 6 Good Tide and Grön products that weren't on the Wyld menu.
 
 ## Why it matters before you create products
 
@@ -35,14 +35,17 @@ Field notes:
 
 ## 3. Wait for packages
 
-Within about a minute, `GET /public/v1/metrc/packages` lists them. Keep rows with `status: "ACTIVE"`. If the list is still empty after 3 minutes, check that the license numbers are right and that the key belongs to a user with access to them.
+Packages usually show up in `GET /public/v1/metrc/packages` within 2 to 6 minutes; a new license pulls its Metrc history first. Keep the storefront moving while you wait, and poll every 30 seconds. Keep rows with `status: "ACTIVE"` (the list also holds discontinued packages). If the list is still empty after 10 minutes, check that the license numbers are right and that the key belongs to a user with access to them.
 
-## 4. Map and import (not yet verified)
+Each package row has `label`, `status`, `quantity`, `unit_type`, and `item` (`name`, `category_name`, `strain`).
+
+## 4. Map and import
 
 1. **Group packages by Metrc item name.**
 2. **Exact name match to an existing product.** Use it. Catalog names were built to match.
 3. **No match: create the product** (`PACKAGE` tracking), with these rules:
    - **Category:** map the Metrc item category to the seeded one ("Edible (weight - each)" → "Infused Edible - Each").
+   - **Tracking:** `inventory_tracking_method: "PACKAGE"`.
    - **Unit:** the Metrc unit "Each" maps to Unit.
    - **Brand:** use the item's name prefix when it matches a sister brand from discovery (Good Tide, Grön).
    - **Tell the user:** this is the magic moment. "6 products in your Metrc weren't on your Wyld menu. They look like Good Tide and Grön, so I added them under those brands."
@@ -52,7 +55,7 @@ Within about a minute, `GET /public/v1/metrc/packages` lists them. Keep rows wit
 {"packages":[{"compliance_label":"1A4060300000C3C000000008","product_id":"<uuid>","location_id":"<id>"}]}
 ```
 
-Up to 300 packages per call, one license per call. The call is all or nothing, so fix the failing row and resend.
+Up to 300 packages per call, one license per call. The call is all or nothing, so fix the failing row and resend. It returns the imported packages with `quantity_available`; add those up for the receipt.
 
 5. **Report** the packages imported, the total units, and the products created from Metrc.
 
