@@ -8,7 +8,7 @@ Tool reference: https://docs.distru.com/mcp
 
 ## §1 Check the connection
 
-1. `distru-get-me`. The company name must match the account from the setup page. If it doesn't, they signed in to another Distru account: ask them to disconnect and sign in with the new login.
+1. `distru-get-me` shows who's signed in. The email must be the login from the setup page. If it isn't, they signed in to another Distru account: ask them to disconnect the connector and sign in with the new login.
 2. `distru-search-products` (`limit: 1`) for `totalCount`, and `distru-search-menus` for the storefront and its public URL.
 3. Post one line: "✓ Connected to your Distru account: Acme Edibles, 35 products, storefront live."
 
@@ -21,15 +21,15 @@ Compare what's in Distru with what you found in research.
 - **Count.** Products in Distru should equal the catalog. The page skips products it couldn't create and says why; recreate them (§4).
 - **Names, categories, potency.** Spot-check five products with `distru-search-products`. Fix one with `distru-mutate-product` (`UPDATE`), or the same change on many with `distru-bulk-update-products`.
 - **Brands.** The page puts every product under the account's own company. For multi-brand companies: create each extra brand with `distru-mutate-company` (`CREATE`, `name`), then move its products with `distru-bulk-update-products` (`ids`, `brandId`).
-- **Featured products.** Pick 4 to 8: the source's own featured pick, then one or two bestsellers per product line. `distru-bulk-update-products` with `isFeatured: true`. With one storefront per brand, 2 to 4 per brand.
+- **Featured products.** Pick 4 to 8: the source's own featured pick, then one or two bestsellers per product line. `distru-bulk-update-products` with `isFeatured: true`. With one storefront per brand, 2 to 4 per brand. Search rows don't show the flag; `distru-get-product` does.
 - **Tracking method.** `inventoryTrackingMethod` on each product is fixed. THC products for a Metrc or BioTrack shop should be `PACKAGE`; hemp, CBD-only, and non-cannabis items `PRODUCT`. If a product is wrong, don't try to change it: tell them, and a Distru specialist will fix it.
 
 ## §3 Polish the storefront
 
-The page builds one storefront: a Featured row plus one row per category, prices hidden.
+The page builds one storefront: a Featured row plus one row per category, prices hidden. If `distru-search-menus` finds none (the page's storefront step failed), create it: `distru-mutate-menu` (`CREATE`, `name`, `locationIds` from `distru-search-locations`, `visibility: PUBLIC`, `active: true`, `hidePricesMode: HIDE_FOR_EVERYONE`, `collections`).
 
-- **Read it:** `distru-get-menu-settings` with `includeCollections: true`.
-- **Rows:** `distru-mutate-menu` (`UPDATE`, `collections`). The list replaces the stored one, so send every row you want to keep (`{id}` keeps one as is). Keep "Featured Products" (`onlyFeaturedProducts: true`) first, then 3 to 5 rows by product line (`productCategoryIds`, `productSubcategoryIds`) or brand (`brandIds`). A product joins a row when it matches every filter set; empty rows are hidden.
+- **Read it:** `distru-get-menu-settings` with `includeCollections: true`. The result is `{menu: {...}}`; the rows are `menu.collections`, each with an `id`.
+- **Rows:** `distru-mutate-menu` (`UPDATE`, `collections`). The list replaces the stored one: every row you leave out is deleted. So always start from `menu.collections`, send `{id}` for each row you keep, and add new rows without an `id`. If you read no rows, stop and read again; never send a list with only your new row. Keep "Featured Products" (`onlyFeaturedProducts: true`) first, then 3 to 5 rows by product line (`productCategoryIds`, `productSubcategoryIds`) or brand (`brandIds`). A product joins a row when it matches every filter set; empty rows are hidden.
 - **Multi-brand, one storefront:** a row per brand right after Featured.
 - **One storefront per brand:** `distru-mutate-menu` (`CREATE`, `name`, `locationIds`, `urlSuffix` in plain lowercase ASCII) for each extra brand, then pin products with `distru-bulk-update-products` (`ids`, `menuVisibility: INCLUDE_IN_SELECT`, `menus`). Logos and banners are set in Distru (Commerce → menu → Appearance); the connector doesn't change appearance.
 - **Prices:** once real wholesale prices are in (§4), switch `hidePricesMode` to `HIDE_FOR_NON_LOGGED_IN_USERS`, so retailers see prices after they log in.
@@ -37,7 +37,7 @@ The page builds one storefront: a Featured row plus one row per category, prices
 
 ## §4 Products and prices
 
-**Creating products** (spreadsheet, website, pasted list, or ones the page skipped). One `distru-mutate-product` (`CREATE`) per product:
+**Creating products** (spreadsheet, website, pasted list, or ones the page skipped). One `distru-mutate-product` (`CREATE`) per product; the result is `{product: {...}}`:
 
 | Field | Value |
 |---|---|

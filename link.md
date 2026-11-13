@@ -64,10 +64,10 @@ Before you send it, check that `company`, `email`, `state`, and `inventory` are 
 ## What the page does
 
 1. Reads the catalog from `source` and shows a preview, before anything is created.
-2. When they click: creates the Distru account and login with Distru Commerce on, adds the warehouse, sets up categories, adds up to 150 products with the tracking method from `inventory`, and uploads the photos.
-3. Builds a branded storefront: logo, banner, color, a Featured row, and one row per category, with prices hidden until real prices are in.
-4. Shows the login (the temporary password appears only there), the storefront link, and for Metrc shops a field to connect Metrc.
-5. Shows a button that adds the Distru connector to Claude, and a message to paste into a new chat if the connector doesn't show up in this one.
+2. When they click: creates the Distru account and login with Distru Commerce on, and right away shows the login (the temporary password appears only there) and a button that adds the Distru connector to Claude, plus a message to paste into a new chat if the connector doesn't show up in this one.
+3. Meanwhile it adds the warehouse, sets up categories, adds up to 150 products with the tracking method from `inventory`, and uploads the photos.
+4. Builds a branded storefront: logo, banner, color, a Featured row, and one row per category, with prices hidden until real prices are in. If the storefront fails, the account and catalog stay, and you build it with the connector (connector.md §3).
+5. Shows the storefront link, and for Metrc shops a field to connect Metrc.
 6. Records each stage and their answers for Distru's team.
 
 A reload or a second tab picks up where it stopped and never creates a second account. "Try again" after an error does the same.

@@ -34,8 +34,8 @@ The goal is a live, fully loaded storefront and an account that matches how they
 | 2 | Research | About a minute on the company, its state, address, catalog, and brands (see "Research"). |
 | 3 | Interview | One message: what you found, then the short questions below. |
 | 4 | Setup link | Plan card plus the link (link.md). They check the page and click once. |
-| 5 | Setup page | Distru creates the account, loads the catalog and photos, and builds the storefront, in about two minutes. Metrc shops connect Metrc on the same page. |
-| 6 | Connect | They add the Distru connector and say "connected". Check it works (connector.md §1). |
+| 5 | Setup page | Distru creates the account and shows their login right away, then loads the catalog and photos and builds the storefront, in about two minutes. Metrc shops connect Metrc on the same page. |
+| 6 | Connect | They add the Distru connector, which they can do while the catalog loads, and say "connected". Check it works (connector.md §1). |
 | 7 | Review and polish | Check the catalog and storefront, then fix what the page couldn't: brands, featured products, rows, prices, missing products (connector.md §2–4). |
 | 8 | Stock | Metrc: import packages (metrc.md). Spreadsheet: load counts (connector.md §5). Otherwise skip. |
 | 9 | Hand off | Verify and send the receipt. |
@@ -95,7 +95,7 @@ People answer out of order and add requests ("name the account Acme Test"). Use 
 >
 > **[Set up Acme Edibles on Distru →](<setup link>)**
 >
-> Check the details on the page and click the button. When it's done it shows your login and a button to connect Distru to Claude. Come back here and say **connected**.
+> Check the details on the page and click the button. As soon as your account exists, the page shows your login and a button to connect Distru to Claude; do that while your products load, then come back here and say **connected**.
 
 If anything's off, they can fix it on the page, or tell you and you'll send a new link. Don't send a second link after they've clicked: the page already created the account.
 
