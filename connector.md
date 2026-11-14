@@ -6,6 +6,8 @@ After the setup page, the person adds the Distru connector (Claude: Settings →
 
 Tool reference: https://docs.distru.com/mcp
 
+Make Distru calls one at a time. The connector allows about 6 at once and answers "Rate limit exceeded" past that; wait a second and retry.
+
 ## §1 Check the connection
 
 1. `distru-get-me` shows who's signed in. The email must be the login from the setup page. If it isn't, they signed in to another Distru account: ask them to disconnect the connector and sign in with the new login.
@@ -42,7 +44,7 @@ The page builds one storefront: a Featured row plus one row per category, prices
 | Field | Value |
 |---|---|
 | `name`, `sku` | Unique in the company. No `:`, `[` or `]`. Make stable SKUs from brand and product if they have none (`ACME-MANGO-100`), and say so. |
-| `categoryId` | `distru-search-lookups` (type `PRODUCT_CATEGORY`). Reuse the seeded state categories. |
+| `categoryId` | `distru-search-lookups` (type `PRODUCT_CATEGORY`). Reuse the seeded state categories. For a new one ("Hemp CBD Flower"), `distru-create-reference-type` (`type: PRODUCT_CATEGORY`, `name`, `officialProductCategoryId`), then look up its id with `distru-search-lookups`. |
 | `unitTypeId` | `distru-search-lookups` (type `UNIT_TYPE`): Unit for packaged goods |
 | `vendorId` | Their own company (`distru-search-companies`) |
 | `unitPrice` | Their wholesale price, or 0 if unknown |
